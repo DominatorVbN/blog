@@ -1,12 +1,10 @@
+import Foundation
 import Publish
 import Plot
 
 extension Theme where Site == Blog {
     static var blog: Self {
-        Theme(
-            htmlFactory: BlogHTMLFactory(),
-            resourcePaths: ["Resources/styles.css"]
-        )
+        Theme(htmlFactory: BlogHTMLFactory())
     }
 }
 
@@ -165,7 +163,8 @@ private struct BlogHTMLFactory: HTMLFactory {
     }
 
     func makeTagDetailsHTML(for page: TagDetailsPage, context: PublishingContext<Blog>) throws -> HTML? {
-        HTML(
+        let items = context.items(taggedWith: page.tag, sortedBy: \.date, order: .descending)
+        return HTML(
             .lang(context.site.language),
             .siteHead(for: page, on: context.site),
             .body(
@@ -174,7 +173,7 @@ private struct BlogHTMLFactory: HTMLFactory {
                     .h1(.span(.class("tag"), .text(page.tag.string))),
                     .ul(
                         .class("item-list"),
-                        .forEach(page.items) { item in
+                        .forEach(items) { item in
                             .li(.itemRow(for: item, on: context.site))
                         }
                     )

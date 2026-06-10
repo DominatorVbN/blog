@@ -16,13 +16,10 @@ struct Blog: Website {
     var imagePath: Path? { nil }
 }
 
-try Blog().publish(
-    withTheme: .blog,
-    additionalSteps: [
-        .step(named: "Set posts section title") { context in
-            context.mutateSection(withID: .posts) { section in
-                section.title = "Posts"
-            }
-        }
-    ]
-)
+try Blog().publish(using: [
+    .addMarkdownFiles(),
+    .copyResources(),
+    .generateHTML(withTheme: .blog),
+    .generateRSSFeed(including: [.posts]),
+    .generateSiteMap()
+])
