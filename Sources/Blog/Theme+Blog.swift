@@ -18,16 +18,41 @@ private struct BlogHTMLFactory: HTMLFactory {
                 .main(
                     .div(
                         .class("intro"),
-                        .span(.class("badge"), .text("Senior iOS Engineer · Rakuten Viki")),
+                        .span(.class("badge"), .text("Senior iOS Engineer")),
                         .h1(.text("Hey, I'm Amit Samant")),
                         .p(.class("tagline"), .text("I build iOS apps and Swift tools. WWDC20 Swift Student Challenge winner.")),
                         .p(.text("I've been writing Swift since 2018 — mostly iOS, some macOS, and wherever else Swift will run. I care about clean architecture, pixel-perfect UI, and developer tooling that actually saves time.")),
-                        .p(.text("Currently a Senior iOS Engineer at Rakuten Viki in Singapore. Previously spread across Bengaluru, Hyderabad, Gurugram, and Indore.")),
                         .div(
                             .class("links-row"),
                             .a(.href("https://github.com/DominatorVbN"), .class("link-pill"), .text("GitHub")),
                             .a(.href("https://twitter.com/amitsamant_dev"), .class("link-pill"), .text("Twitter / X")),
                             .a(.href("https://linkedin.com/in/amitsamant-dev"), .class("link-pill"), .text("LinkedIn"))
+                        )
+                    ),
+                    .div(
+                        .p(.class("section-title"), .text("Career")),
+                        .div(
+                            .class("timeline"),
+                            .timelineEntry(
+                                period: "2023 — Present",
+                                title: "Senior iOS Engineer · Rakuten Viki",
+                                detail: "Building the Viki streaming app for iOS and tvOS in Singapore — performance, polished UI animation, and everything in between."
+                            ),
+                            .timelineEntry(
+                                period: "2020 — 2023",
+                                title: "iOS Engineer · India",
+                                detail: "Shipped iOS apps with product teams across Bengaluru, Hyderabad, Gurugram, and Indore. Co-organizer of Swift Bengaluru and Swift Bharat."
+                            ),
+                            .timelineEntry(
+                                period: "2020",
+                                title: "WWDC20 Swift Student Challenge Winner",
+                                detail: "Recognized by Apple in my final year of college."
+                            ),
+                            .timelineEntry(
+                                period: "2018",
+                                title: "Hello, Swift",
+                                detail: "Wrote my first lines of Swift in college — and haven't stopped since."
+                            )
                         )
                     ),
                     .if(!context.sections[.posts].items.isEmpty,
@@ -252,6 +277,15 @@ private extension Node where Context == HTML.BodyContext {
             .if(!item.description.isEmpty,
                 .p(.class("item-description"), .text(item.description))
             )
+        )
+    }
+
+    static func timelineEntry(period: String, title: String, detail: String) -> Node {
+        .div(
+            .class("timeline-entry"),
+            .p(.class("timeline-period"), .text(period)),
+            .h3(.class("timeline-title"), .text(title)),
+            .p(.class("timeline-detail"), .text(detail))
         )
     }
 
