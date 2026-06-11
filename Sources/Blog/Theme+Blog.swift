@@ -87,12 +87,14 @@ private struct BlogHTMLFactory: HTMLFactory {
                                 href: "https://dominatorvbn.github.io/DeeplinkScoutDocs/",
                                 title: "DeeplinkScout",
                                 description: "Test, organize, and launch deeplinks across iOS simulators and devices from your Mac.",
+                                iconURL: "https://dominatorvbn.github.io/DeeplinkScoutDocs/assets/app-icon.png",
                                 linkLabel: "Visit website"
                             ),
                             .appCard(
                                 href: "https://apps.apple.com/us/app/notifyhub-push-notification/id6472355827",
                                 title: "NotifyHub",
                                 description: "Server-less push notification testing on iPhone, iPad, Mac, and Apple Vision Pro.",
+                                iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/e0/a2/31/e0a231a7-8b91-25d9-921c-bbe1b0da438b/AppIcon-0-0-1x_U007epad-0-85-220.png/512x512bb.jpg",
                                 linkLabel: "View on the App Store"
                             )
                         )
@@ -103,19 +105,23 @@ private struct BlogHTMLFactory: HTMLFactory {
                             .class("community-grid"),
                             .communityCard(
                                 title: "Swift Bengaluru",
-                                detail: "Organized monthly iOS meetups across Bengaluru, Hyderabad, and Kolkata."
+                                detail: "Organized monthly iOS meetups across Bengaluru, Hyderabad, and Kolkata.",
+                                logoURL: "https://github.com/swiftbengaluru.png"
                             ),
                             .communityCard(
                                 title: "WWDC Watch Party",
-                                detail: "Hosted WWDC-week watch parties joined by 100+ engineers in Bengaluru."
+                                detail: "Hosted WWDC-week watch parties joined by 100+ engineers in Bengaluru.",
+                                monogram: "WW"
                             ),
                             .communityCard(
                                 title: "Swift Bharat",
-                                detail: "Helped build and connect Swift and iOS communities across India."
+                                detail: "Helped build and connect Swift and iOS communities across India.",
+                                monogram: "SB"
                             ),
                             .communityCard(
                                 title: "Speaking",
-                                detail: "Talks at Swift India, Swift Anytime, and community meetups."
+                                detail: "Talks at Swift India, Swift Anytime, and community meetups.",
+                                logoURL: "https://github.com/swiftindia.png"
                             )
                         )
                     ),
@@ -326,16 +332,26 @@ private extension Node where Context == HTML.BodyContext {
 
     static func itemRow(for item: Item<Blog>, on site: Blog) -> Node {
         .group(
-            .a(.href(site.prefixedPath(item.path)), .class("item-title"), .text(item.title)),
+            .unwrap(item.imagePath) { imagePath in
+                .a(
+                    .href(site.prefixedPath(item.path)),
+                    .class("item-thumb-link"),
+                    .img(.class("item-thumb"), .src(site.prefixedPath(imagePath)), .alt(item.title))
+                )
+            },
             .div(
-                .class("item-meta"),
-                .span(.text(DateFormatter.postDate.string(from: item.date))),
-                .forEach(item.tags) { tag in
-                    .a(.href(site.prefixedPath(site.path(for: tag))), .class("tag"), .text(tag.string))
-                }
-            ),
-            .if(!item.description.isEmpty,
-                .p(.class("item-description"), .text(item.description))
+                .class("item-body"),
+                .a(.href(site.prefixedPath(item.path)), .class("item-title"), .text(item.title)),
+                .div(
+                    .class("item-meta"),
+                    .span(.text(DateFormatter.postDate.string(from: item.date))),
+                    .forEach(item.tags) { tag in
+                        .a(.href(site.prefixedPath(site.path(for: tag))), .class("tag"), .text(tag.string))
+                    }
+                ),
+                .if(!item.description.isEmpty,
+                    .p(.class("item-description"), .text(item.description))
+                )
             )
         )
     }
@@ -352,25 +368,32 @@ private extension Node where Context == HTML.BodyContext {
     static func projectCard(href: String, title: String, description: String) -> Node {
         .a(
             .href(href),
-            .class("project-card"),
+            .class("project-card repo-card"),
             .h3(.text(title)),
             .p(.text(description))
         )
     }
 
-    static func appCard(href: String, title: String, description: String, linkLabel: String) -> Node {
+    static func appCard(href: String, title: String, description: String, iconURL: String, linkLabel: String) -> Node {
         .a(
             .href(href),
             .class("project-card app-card"),
+            .img(.class("app-icon"), .src(iconURL), .alt(title + " app icon")),
             .h3(.text(title)),
             .p(.text(description)),
             .span(.class("card-link-label"), .text(linkLabel))
         )
     }
 
-    static func communityCard(title: String, detail: String) -> Node {
+    static func communityCard(title: String, detail: String, logoURL: String? = nil, monogram: String? = nil) -> Node {
         .div(
             .class("community-card"),
+            .unwrap(logoURL) { url in
+                .img(.class("community-logo"), .src(url), .alt(title + " logo"))
+            },
+            .unwrap(monogram) { initials in
+                .span(.class("community-monogram"), .text(initials))
+            },
             .h3(.text(title)),
             .p(.text(detail))
         )
