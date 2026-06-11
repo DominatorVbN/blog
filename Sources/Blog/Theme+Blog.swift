@@ -34,24 +34,34 @@ private struct BlogHTMLFactory: HTMLFactory {
                         .div(
                             .class("timeline"),
                             .timelineEntry(
-                                period: "2023 — Present",
-                                title: "Senior iOS Engineer · Rakuten Viki",
-                                detail: "Building the Viki streaming app for iOS and tvOS in Singapore — performance, polished UI animation, and everything in between."
+                                period: "Oct 2024 — Present",
+                                title: "Senior Software Engineer (iOS) · Rakuten Viki",
+                                detail: "Building the Viki streaming app for iOS and tvOS in Singapore — release management, Xcode 16 CI upgrades for iOS 18/tvOS 18, and raising test coverage from 24% to 32%."
                             ),
                             .timelineEntry(
-                                period: "2020 — 2023",
-                                title: "iOS Engineer · India",
-                                detail: "Shipped iOS apps with product teams across Bengaluru, Hyderabad, Gurugram, and Indore. Co-organizer of Swift Bengaluru and Swift Bharat."
+                                period: "Dec 2021 — Oct 2024",
+                                title: "Senior Software Engineer (iOS) · Gojek, DevX Platform",
+                                detail: "Platform engineering for the Gojek super-app — built AppAuditSDK tracking page performance across 100% of screens, cut app size and disk usage, and shipped app-health dashboards."
+                            ),
+                            .timelineEntry(
+                                period: "Jun — Dec 2021",
+                                title: "Product Engineer (iOS) · Zomato",
+                                detail: "Built the Pro Plus membership experience with an 82.7% subscription rate among invited members, and cut build times 90% by moving to precompiled XCFrameworks."
+                            ),
+                            .timelineEntry(
+                                period: "Aug 2020 — May 2021",
+                                title: "Product Engineer (iOS) · Loyalty Juggernaut",
+                                detail: "Built the MUSE app from scratch and the GravtySDK that powers 10+ loyalty apps, distributed via CocoaPods, Carthage, and SPM."
                             ),
                             .timelineEntry(
                                 period: "2020",
                                 title: "WWDC20 Swift Student Challenge Winner",
-                                detail: "Recognized by Apple in my final year of college."
+                                detail: "Recognized by Apple in my final year of college, top among 350+ submissions worldwide."
                             ),
                             .timelineEntry(
-                                period: "2018",
-                                title: "Hello, Swift",
-                                detail: "Wrote my first lines of Swift in college — and haven't stopped since."
+                                period: "2018 — 2020",
+                                title: "Internships & first apps",
+                                detail: "Shipped my first iOS apps at SBNRI, EngineerBabu, MMF Infotech, and Natraj Infotech while studying Computer Science in Indore."
                             )
                         )
                     ),
