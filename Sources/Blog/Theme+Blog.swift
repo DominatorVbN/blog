@@ -103,15 +103,15 @@ private struct BlogHTMLFactory: HTMLFactory {
                             .class("community-grid"),
                             .communityCard(
                                 title: "Swift Bengaluru",
-                                detail: "Organizer — hosting monthly iOS meetups across Bengaluru, Hyderabad, and Kolkata."
+                                detail: "Organized monthly iOS meetups across Bengaluru, Hyderabad, and Kolkata."
                             ),
                             .communityCard(
                                 title: "WWDC Watch Party",
-                                detail: "Hosting WWDC-week watch parties joined by 100+ engineers in Bengaluru."
+                                detail: "Hosted WWDC-week watch parties joined by 100+ engineers in Bengaluru."
                             ),
                             .communityCard(
                                 title: "Swift Bharat",
-                                detail: "Organizer — connecting Swift and iOS communities across India."
+                                detail: "Helped build and connect Swift and iOS communities across India."
                             ),
                             .communityCard(
                                 title: "Speaking",
