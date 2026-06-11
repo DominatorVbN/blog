@@ -469,6 +469,56 @@ main {
   margin: 0;
 }
 
+/* ── Live app cards ──────────────────────────────────────────────────── */
+.app-card .card-link-label {
+  display: inline-block;
+  margin-top: 0.85rem;
+  font-size: 0.824rem;
+  font-weight: 500;
+  letter-spacing: -0.016em;
+  color: var(--accent);
+}
+.app-card .card-link-label::after {
+  content: "";
+  display: inline-block;
+  width: 0.4em;
+  height: 0.7em;
+  margin-left: 0.35em;
+  background-color: currentColor;
+  -webkit-mask: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 16"%3E%3Cpath d="M1 1l7 7-7 7" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E') no-repeat center / contain;
+  mask: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 16"%3E%3Cpath d="M1 1l7 7-7 7" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E') no-repeat center / contain;
+}
+.app-card h3::after { content: none; }
+
+/* ── Community outreach ──────────────────────────────────────────────── */
+.community-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.community-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+.community-card h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+.community-card p {
+  font-size: 0.824rem;
+  letter-spacing: -0.016em;
+  color: var(--text-secondary);
+  line-height: 1.43;
+  margin: 0;
+}
+
 /* ── Tag pages ───────────────────────────────────────────────────────── */
 .tag-list { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.25rem; }
 .tag-list a {
@@ -549,6 +599,7 @@ main > h1 {
   .post-header h1 { font-size: 1.882rem; }
   main > h1 { font-size: 1.882rem; }
   .projects-grid { grid-template-columns: 1fr; }
+  .community-grid { grid-template-columns: 1fr; }
   nav { gap: 1.25rem; }
   main { padding: 2.5rem 1.375rem 4rem; }
 }

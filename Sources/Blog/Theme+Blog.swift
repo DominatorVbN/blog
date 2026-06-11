@@ -29,6 +29,96 @@ private struct BlogHTMLFactory: HTMLFactory {
                             .a(.href("https://linkedin.com/in/amitsamant-dev"), .class("link-pill"), .text("LinkedIn"))
                         )
                     ),
+                    .if(!context.sections[.posts].items.isEmpty,
+                        .div(
+                            .p(.class("section-title"), .text("Recent Posts")),
+                            .ul(
+                                .class("item-list"),
+                                .forEach(context.sections[.posts].items.prefix(5)) { item in
+                                    .li(.itemRow(for: item, on: context.site))
+                                }
+                            ),
+                            .if(context.sections[.posts].items.count > 5,
+                                .p(.a(.href(context.site.prefixedPath("/posts")), .text("View all posts →")))
+                            )
+                        )
+                    ),
+                    .div(
+                        .p(.class("section-title"), .text("Top Repositories")),
+                        .div(
+                            .class("projects-grid"),
+                            .projectCard(
+                                href: "https://github.com/gojek/StorageToolKit-iOS",
+                                title: "StorageToolKit",
+                                description: "StorageCleaner, StorageAnalyser, and friends — disk-usage tooling for iOS, open sourced at Gojek"
+                            ),
+                            .projectCard(
+                                href: "https://github.com/DominatorVbN/TranslucentWindowStyle",
+                                title: "TranslucentWindowStyle",
+                                description: "SwiftUI package for blurred translucent macOS windows"
+                            ),
+                            .projectCard(
+                                href: "https://github.com/DominatorVbN/ElegantAPI",
+                                title: "ElegantAPI",
+                                description: "API management for URLSession, inspired by Moya"
+                            ),
+                            .projectCard(
+                                href: "https://github.com/DominatorVbN/DiskSpaceProvider",
+                                title: "DiskSpaceProvider",
+                                description: "Micro-library with simple APIs to check disk storage capacity"
+                            ),
+                            .projectCard(
+                                href: "https://github.com/DominatorVbN/SlideUpPanel",
+                                title: "SlideUpPanel",
+                                description: "Google Maps–style slide-up panel control for UIKit"
+                            ),
+                            .projectCard(
+                                href: "https://github.com/DominatorVbN/Swift-Student-Challenge-Resources",
+                                title: "WWDC Resources",
+                                description: "Curated guide for Apple WWDC Swift Student Challenge applicants"
+                            )
+                        )
+                    ),
+                    .div(
+                        .p(.class("section-title"), .text("Live Apps")),
+                        .div(
+                            .class("projects-grid"),
+                            .appCard(
+                                href: "https://dominatorvbn.github.io/DeeplinkScoutDocs/",
+                                title: "DeeplinkScout",
+                                description: "Test, organize, and launch deeplinks across iOS simulators and devices from your Mac.",
+                                linkLabel: "Visit website"
+                            ),
+                            .appCard(
+                                href: "https://apps.apple.com/us/app/notifyhub-push-notification/id6472355827",
+                                title: "NotifyHub",
+                                description: "Server-less push notification testing on iPhone, iPad, Mac, and Apple Vision Pro.",
+                                linkLabel: "View on the App Store"
+                            )
+                        )
+                    ),
+                    .div(
+                        .p(.class("section-title"), .text("Community Outreach")),
+                        .div(
+                            .class("community-grid"),
+                            .communityCard(
+                                title: "Swift Bengaluru",
+                                detail: "Organizer — hosting monthly iOS meetups across Bengaluru, Hyderabad, and Kolkata."
+                            ),
+                            .communityCard(
+                                title: "WWDC Watch Party",
+                                detail: "Hosting WWDC-week watch parties joined by 100+ engineers in Bengaluru."
+                            ),
+                            .communityCard(
+                                title: "Swift Bharat",
+                                detail: "Organizer — connecting Swift and iOS communities across India."
+                            ),
+                            .communityCard(
+                                title: "Speaking",
+                                detail: "Talks at Swift India, Swift Anytime, and community meetups."
+                            )
+                        )
+                    ),
                     .div(
                         .p(.class("section-title"), .text("Career")),
                         .div(
@@ -62,46 +152,6 @@ private struct BlogHTMLFactory: HTMLFactory {
                                 period: "2018 — 2020",
                                 title: "Internships & first apps",
                                 detail: "Shipped my first iOS apps at SBNRI, EngineerBabu, MMF Infotech, and Natraj Infotech while studying Computer Science in Indore."
-                            )
-                        )
-                    ),
-                    .if(!context.sections[.posts].items.isEmpty,
-                        .div(
-                            .p(.class("section-title"), .text("Recent Posts")),
-                            .ul(
-                                .class("item-list"),
-                                .forEach(context.sections[.posts].items.prefix(5)) { item in
-                                    .li(.itemRow(for: item, on: context.site))
-                                }
-                            ),
-                            .if(context.sections[.posts].items.count > 5,
-                                .p(.a(.href(context.site.prefixedPath("/posts")), .text("View all posts →")))
-                            )
-                        )
-                    ),
-                    .div(
-                        .p(.class("section-title"), .text("Selected Projects")),
-                        .div(
-                            .class("projects-grid"),
-                            .projectCard(
-                                href: "https://github.com/DominatorVbN/DeeplinkScout",
-                                title: "DeeplinkScout",
-                                description: "macOS utility for testing deeplinks across iOS simulators and real devices"
-                            ),
-                            .projectCard(
-                                href: "https://github.com/DominatorVbN/ElegantAPI",
-                                title: "ElegantAPI",
-                                description: "URLSession wrapper with async/await and Combine support"
-                            ),
-                            .projectCard(
-                                href: "https://github.com/DominatorVbN/TranslucentWindowStyle",
-                                title: "TranslucentWindowStyle",
-                                description: "SwiftUI package for blurred translucent macOS windows"
-                            ),
-                            .projectCard(
-                                href: "https://github.com/DominatorVbN/Swift-Student-Challenge-Resources",
-                                title: "WWDC Resources",
-                                description: "Curated guide for Apple WWDC Swift Student Challenge applicants"
                             )
                         )
                     )
@@ -305,6 +355,24 @@ private extension Node where Context == HTML.BodyContext {
             .class("project-card"),
             .h3(.text(title)),
             .p(.text(description))
+        )
+    }
+
+    static func appCard(href: String, title: String, description: String, linkLabel: String) -> Node {
+        .a(
+            .href(href),
+            .class("project-card app-card"),
+            .h3(.text(title)),
+            .p(.text(description)),
+            .span(.class("card-link-label"), .text(linkLabel))
+        )
+    }
+
+    static func communityCard(title: String, detail: String) -> Node {
+        .div(
+            .class("community-card"),
+            .h3(.text(title)),
+            .p(.text(detail))
         )
     }
 }
