@@ -40,7 +40,7 @@ private struct BlogHTMLFactory: HTMLFactory {
                                 }
                             ),
                             .if(context.sections[.posts].items.count > 5,
-                                .p(.a(.href("/posts"), .text("View all posts →")))
+                                .p(.a(.href(context.site.prefixedPath("/posts")), .text("View all posts →")))
                             )
                         )
                     ),
@@ -115,7 +115,7 @@ private struct BlogHTMLFactory: HTMLFactory {
                                 .span(.text(DateFormatter.postDate.string(from: item.date))),
                                 .if(!item.tags.isEmpty,
                                     .forEach(item.tags) { tag in
-                                        .a(.href(context.site.path(for: tag)), .class("tag"), .text(tag.string))
+                                        .a(.href(context.site.prefixedPath(context.site.path(for: tag))), .class("tag"), .text(tag.string))
                                     }
                                 )
                             )
@@ -153,7 +153,7 @@ private struct BlogHTMLFactory: HTMLFactory {
                     .div(
                         .class("tag-list"),
                         .forEach(page.tags.sorted()) { tag in
-                            .a(.href(context.site.path(for: tag)), .text(tag.string))
+                            .a(.href(context.site.prefixedPath(context.site.path(for: tag))), .text(tag.string))
                         }
                     )
                 ),
@@ -184,6 +184,27 @@ private struct BlogHTMLFactory: HTMLFactory {
     }
 }
 
+// MARK: - Path handling
+
+// The site is hosted as a GitHub Pages project site under the "/blog"
+// subpath, so root-relative links like "/styles.css" would resolve outside
+// the site. Prefix every internal link with the path component of site.url.
+private extension Website {
+    var pathPrefix: String {
+        var prefix = url.path
+        while prefix.hasSuffix("/") { prefix.removeLast() }
+        return prefix
+    }
+
+    func prefixedPath(_ path: Path) -> String {
+        pathPrefix + path.absoluteString
+    }
+
+    func prefixedPath(_ path: String) -> String {
+        prefixedPath(Path(path))
+    }
+}
+
 // MARK: - Shared nodes
 
 private extension Node where Context == HTML.BodyContext {
@@ -192,11 +213,11 @@ private extension Node where Context == HTML.BodyContext {
             .class("site-header"),
             .div(
                 .class("inner"),
-                .a(.href("/"), .class("site-name"), .text(context.site.name)),
+                .a(.href(context.site.prefixedPath("/")), .class("site-name"), .text(context.site.name)),
                 .nav(
                     .a(
-                        .href("/posts"),
-                        .class(currentPath.hasPrefix("/posts") ? "selected" : ""),
+                        .href(context.site.prefixedPath("/posts")),
+                        .class(currentPath.drop(while: { $0 == "/" }).hasPrefix("posts") ? "selected" : ""),
                         .text("Posts")
                     ),
                     .a(
@@ -220,12 +241,12 @@ private extension Node where Context == HTML.BodyContext {
 
     static func itemRow(for item: Item<Blog>, on site: Blog) -> Node {
         .group(
-            .a(.href(item.path), .class("item-title"), .text(item.title)),
+            .a(.href(site.prefixedPath(item.path)), .class("item-title"), .text(item.title)),
             .div(
                 .class("item-meta"),
                 .span(.text(DateFormatter.postDate.string(from: item.date))),
                 .forEach(item.tags) { tag in
-                    .a(.href(site.path(for: tag)), .class("tag"), .text(tag.string))
+                    .a(.href(site.prefixedPath(site.path(for: tag))), .class("tag"), .text(tag.string))
                 }
             ),
             .if(!item.description.isEmpty,
@@ -256,7 +277,7 @@ private extension Node where Context == HTML.DocumentContext {
             .description(location.description.isEmpty ? site.description : location.description),
             .twitterCardType(.summary),
             .viewport(.accordingToDevice),
-            .link(.rel(.stylesheet), .href("/styles.css"))
+            .link(.rel(.stylesheet), .href(site.prefixedPath("/styles.css")))
         )
     }
 }
