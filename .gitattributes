@@ -1,0 +1,5 @@
+Resources/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+Resources/**/*.gif filter=lfs diff=lfs merge=lfs -text
+Resources/**/*.webp filter=lfs diff=lfs merge=lfs -text
+Resources/**/*.png filter=lfs diff=lfs merge=lfs -text
+Resources/**/*.jpg filter=lfs diff=lfs merge=lfs -text
