@@ -106,22 +106,22 @@ private struct BlogHTMLFactory: HTMLFactory {
                             .communityCard(
                                 title: "Swift Bengaluru",
                                 detail: "Organized monthly iOS meetups across Bengaluru, Hyderabad, and Kolkata.",
-                                logoURL: "https://github.com/swiftbengaluru.png"
+                                photo: context.site.prefixedPath("/images/community/swift-bengaluru.jpg")
                             ),
                             .communityCard(
                                 title: "WWDC Watch Party",
                                 detail: "Hosted WWDC-week watch parties joined by 100+ engineers in Bengaluru.",
-                                monogram: "WW"
+                                photo: context.site.prefixedPath("/images/community/wwdc-watch-party.jpg")
                             ),
                             .communityCard(
                                 title: "Swift Bharat",
                                 detail: "Helped build and connect Swift and iOS communities across India.",
-                                monogram: "SB"
+                                photo: context.site.prefixedPath("/images/community/swift-bharat.jpg")
                             ),
                             .communityCard(
                                 title: "Speaking",
                                 detail: "Talks at Swift India, Swift Anytime, and community meetups.",
-                                logoURL: "https://github.com/swiftindia.png"
+                                photo: context.site.prefixedPath("/images/community/speaking.jpg")
                             )
                         )
                     ),
@@ -385,17 +385,17 @@ private extension Node where Context == HTML.BodyContext {
         )
     }
 
-    static func communityCard(title: String, detail: String, logoURL: String? = nil, monogram: String? = nil) -> Node {
+    static func communityCard(title: String, detail: String, photo: String? = nil) -> Node {
         .div(
             .class("community-card"),
-            .unwrap(logoURL) { url in
-                .img(.class("community-logo"), .src(url), .alt(title + " logo"))
+            .unwrap(photo) { url in
+                .img(.class("community-photo"), .src(url), .alt(title))
             },
-            .unwrap(monogram) { initials in
-                .span(.class("community-monogram"), .text(initials))
-            },
-            .h3(.text(title)),
-            .p(.text(detail))
+            .div(
+                .class("community-card-body"),
+                .h3(.text(title)),
+                .p(.text(detail))
+            )
         )
     }
 }
