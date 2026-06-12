@@ -415,6 +415,18 @@ private extension Node where Context == HTML.DocumentContext {
                 .attribute(named: "name", value: "viewport"),
                 .attribute(named: "content", value: "width=device-width, initial-scale=1, viewport-fit=cover")
             ),
+            // Safari tints the status bar / browser chrome area with theme-color;
+            // CSS cannot reach that region in a regular browser tab.
+            .meta(
+                .attribute(named: "name", value: "theme-color"),
+                .attribute(named: "content", value: "#fbfbfd"),
+                .attribute(named: "media", value: "(prefers-color-scheme: light)")
+            ),
+            .meta(
+                .attribute(named: "name", value: "theme-color"),
+                .attribute(named: "content", value: "#161617"),
+                .attribute(named: "media", value: "(prefers-color-scheme: dark)")
+            ),
             .link(.rel(.stylesheet), .href(site.prefixedPath("/styles.css")))
         )
     }
