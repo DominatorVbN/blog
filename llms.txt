@@ -1,0 +1,19 @@
+# Amit Samant
+
+> Senior iOS Engineer. Writing about Swift, iOS, and software engineering.
+
+Amit Samant is a Senior iOS Engineer at Rakuten Viki in Singapore, a WWDC20 Swift
+Student Challenge winner, and an organizer of Swift Bengaluru and Swift Bharat.
+This site is his blog about Swift, iOS, and software engineering.
+
+## Posts
+
+- [What's New in SwiftUI](https://amitsamant.dev/blog/posts/whats-new-in-swiftui) (2026-06-11): A summary of everything new in SwiftUI at WWDC 2026 — refreshed look and feel, document-based app APIs, new interaction primitives, and data flow improvements.
+
+## Links
+
+- [Portfolio](https://amitsamant.dev)
+- [GitHub](https://github.com/DominatorVbN)
+- [Twitter / X](https://twitter.com/amitsamant_dev)
+- [LinkedIn](https://linkedin.com/in/amitsamant-dev)
+- [RSS feed](https://amitsamant.dev/blog/feed.rss)
