@@ -43,7 +43,7 @@
   }
 }
 
-html { font-size: 17px; scroll-behavior: smooth; }
+html { font-size: 17px; scroll-behavior: smooth; background: var(--bg); }
 
 body {
   background: var(--bg);
