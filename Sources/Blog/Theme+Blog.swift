@@ -411,7 +411,10 @@ private extension Node where Context == HTML.DocumentContext {
             .title(location.title.isEmpty ? site.name : "\(location.title) · \(site.name)"),
             .description(location.description.isEmpty ? site.description : location.description),
             .twitterCardType(.summary),
-            .viewport(.accordingToDevice),
+            .meta(
+                .attribute(named: "name", value: "viewport"),
+                .attribute(named: "content", value: "width=device-width, initial-scale=1, viewport-fit=cover")
+            ),
             .link(.rel(.stylesheet), .href(site.prefixedPath("/styles.css")))
         )
     }
