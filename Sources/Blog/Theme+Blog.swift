@@ -312,8 +312,8 @@ private extension Node where Context == HTML.BodyContext {
                         .text("Posts")
                     ),
                     .a(
-                        .href("https://github.com/DominatorVbN"),
-                        .text("GitHub")
+                        .href(context.site.prefixedPath("/feed.rss")),
+                        .text("RSS")
                     )
                 )
             )
