@@ -105,7 +105,7 @@ private struct BlogHTMLFactory: HTMLFactory {
                             .class("community-grid"),
                             .communityCard(
                                 title: "Swift Bengaluru",
-                                detail: "Organized monthly iOS meetups across Bengaluru, Hyderabad, Surat, Pune, Kozhikode, and Mumbai.",
+                                detail: "Organized monthly iOS meetups in Bengaluru, and guided and mentored sister communities in Hyderabad, Surat, Pune, Kozhikode, and Mumbai to organize in their own cities.",
                                 photo: context.site.prefixedPath("/images/community/swift-bengaluru.jpg")
                             ),
                             .communityCard(
