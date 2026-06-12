@@ -193,7 +193,7 @@ private struct BlogHTMLFactory: HTMLFactory {
     func makeItemHTML(for item: Item<Blog>, context: PublishingContext<Blog>) throws -> HTML {
         HTML(
             .lang(context.site.language),
-            .siteHead(for: item, on: context.site),
+            .siteHead(for: item, on: context.site, item: item),
             .body(
                 .siteHeader(for: context, currentPath: item.path.string),
                 .main(
@@ -203,7 +203,10 @@ private struct BlogHTMLFactory: HTMLFactory {
                             .h1(.text(item.title)),
                             .div(
                                 .class("post-meta"),
-                                .span(.text(DateFormatter.postDate.string(from: item.date))),
+                                .element(named: "time", nodes: [
+                                    .attribute(named: "datetime", value: ISO8601DateFormatter.shared.string(from: item.date)),
+                                    .text(DateFormatter.postDate.string(from: item.date))
+                                ]),
                                 .if(!item.tags.isEmpty,
                                     .forEach(item.tags) { tag in
                                         .a(.href(context.site.prefixedPath(context.site.path(for: tag))), .class("tag"), .text(tag.string))
@@ -344,7 +347,10 @@ private extension Node where Context == HTML.BodyContext {
                 .a(.href(site.prefixedPath(item.path)), .class("item-title"), .text(item.title)),
                 .div(
                     .class("item-meta"),
-                    .span(.text(DateFormatter.postDate.string(from: item.date))),
+                    .element(named: "time", nodes: [
+                        .attribute(named: "datetime", value: ISO8601DateFormatter.shared.string(from: item.date)),
+                        .text(DateFormatter.postDate.string(from: item.date))
+                    ]),
                     .forEach(item.tags) { tag in
                         .a(.href(site.prefixedPath(site.path(for: tag))), .class("tag"), .text(tag.string))
                     }
@@ -403,14 +409,27 @@ private extension Node where Context == HTML.BodyContext {
 // MARK: - <head>
 
 private extension Node where Context == HTML.DocumentContext {
-    static func siteHead<T: Website>(for location: Location, on site: T) -> Node {
-        .head(
+    static func siteHead(for location: Location, on site: Blog, item: Item<Blog>? = nil) -> Node {
+        let pageURL = site.url(for: location)
+        let title: String
+        if location is Index {
+            title = "\(site.name) — Swift & iOS Engineering"
+        } else if location.title.isEmpty {
+            title = site.name
+        } else {
+            title = "\(location.title) · \(site.name)"
+        }
+        let description = location.description.isEmpty ? site.description : location.description
+        let imagePath = item?.imagePath ?? Path("/images/og-default.png")
+        let imageURL = site.url(for: imagePath).absoluteString
+
+        return .head(
             .encoding(.utf8),
             .siteName(site.name),
-            .url(site.url(for: location)),
-            .title(location.title.isEmpty ? site.name : "\(location.title) · \(site.name)"),
-            .description(location.description.isEmpty ? site.description : location.description),
-            .twitterCardType(.summary),
+            .url(pageURL),
+            .title(title),
+            .description(description),
+            .twitterCardType(.summaryLargeImage),
             .meta(
                 .attribute(named: "name", value: "viewport"),
                 .attribute(named: "content", value: "width=device-width, initial-scale=1, viewport-fit=cover")
@@ -427,12 +446,135 @@ private extension Node where Context == HTML.DocumentContext {
                 .attribute(named: "content", value: "#161617"),
                 .attribute(named: "media", value: "(prefers-color-scheme: dark)")
             ),
-            .link(.rel(.stylesheet), .href(site.prefixedPath("/styles.css")))
+            .meta(
+                .attribute(named: "name", value: "author"),
+                .attribute(named: "content", value: "Amit Samant")
+            ),
+            .meta(
+                .attribute(named: "property", value: "og:type"),
+                .attribute(named: "content", value: item == nil ? "website" : "article")
+            ),
+            .meta(
+                .attribute(named: "property", value: "og:locale"),
+                .attribute(named: "content", value: "en_US")
+            ),
+            .meta(
+                .attribute(named: "name", value: "twitter:site"),
+                .attribute(named: "content", value: "@amitsamant_dev")
+            ),
+            .meta(
+                .attribute(named: "name", value: "twitter:creator"),
+                .attribute(named: "content", value: "@amitsamant_dev")
+            ),
+            .meta(
+                .attribute(named: "property", value: "og:image"),
+                .attribute(named: "content", value: imageURL)
+            ),
+            .meta(
+                .attribute(named: "name", value: "twitter:image"),
+                .attribute(named: "content", value: imageURL)
+            ),
+            .unwrap(item) { item in
+                .group(
+                    .meta(
+                        .attribute(named: "property", value: "article:published_time"),
+                        .attribute(named: "content", value: ISO8601DateFormatter.shared.string(from: item.date))
+                    ),
+                    .meta(
+                        .attribute(named: "property", value: "article:modified_time"),
+                        .attribute(named: "content", value: ISO8601DateFormatter.shared.string(from: item.lastModified))
+                    ),
+                    .forEach(item.tags) { tag in
+                        .meta(
+                            .attribute(named: "property", value: "article:tag"),
+                            .attribute(named: "content", value: tag.string)
+                        )
+                    }
+                )
+            },
+            .link(
+                .attribute(named: "rel", value: "alternate"),
+                .attribute(named: "type", value: "application/rss+xml"),
+                .attribute(named: "title", value: site.name),
+                .attribute(named: "href", value: site.prefixedPath("/feed.rss"))
+            ),
+            .link(
+                .attribute(named: "rel", value: "icon"),
+                .attribute(named: "type", value: "image/svg+xml"),
+                .attribute(named: "href", value: site.prefixedPath("/favicon.svg"))
+            ),
+            .link(
+                .attribute(named: "rel", value: "icon"),
+                .attribute(named: "type", value: "image/png"),
+                .attribute(named: "sizes", value: "32x32"),
+                .attribute(named: "href", value: site.prefixedPath("/favicon-32.png"))
+            ),
+            .link(
+                .attribute(named: "rel", value: "apple-touch-icon"),
+                .attribute(named: "href", value: site.prefixedPath("/apple-touch-icon.png"))
+            ),
+            .link(.rel(.stylesheet), .href(site.prefixedPath("/styles.css"))),
+            .script(
+                .attribute(named: "type", value: "application/ld+json"),
+                .raw(structuredData(for: location, on: site, item: item))
+            )
         )
     }
 }
 
+// MARK: - Structured data (schema.org JSON-LD)
+
+private let personSchema: [String: Any] = [
+    "@type": "Person",
+    "name": "Amit Samant",
+    "jobTitle": "Senior iOS Engineer",
+    "url": "https://amitsamant.dev",
+    "sameAs": [
+        "https://github.com/DominatorVbN",
+        "https://twitter.com/amitsamant_dev",
+        "https://linkedin.com/in/amitsamant-dev",
+    ],
+]
+
+private func structuredData(for location: Location, on site: Blog, item: Item<Blog>?) -> String {
+    var object: [String: Any]
+    if let item = item {
+        let url = site.url(for: item).absoluteString
+        object = [
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": item.title,
+            "description": item.description,
+            "url": url,
+            "mainEntityOfPage": url,
+            "datePublished": ISO8601DateFormatter.shared.string(from: item.date),
+            "dateModified": ISO8601DateFormatter.shared.string(from: item.lastModified),
+            "keywords": item.tags.map { $0.string }.joined(separator: ", "),
+            "author": personSchema,
+            "publisher": personSchema,
+        ]
+        if let imagePath = item.imagePath {
+            object["image"] = site.url(for: imagePath).absoluteString
+        }
+    } else {
+        object = [
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            "name": site.name,
+            "url": site.url.absoluteString,
+            "description": site.description,
+            "author": personSchema,
+        ]
+    }
+    let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
+    return String(data: data, encoding: .utf8) ?? "{}"
+}
+
 // MARK: - Helpers
+
+private extension ISO8601DateFormatter {
+    static let shared = ISO8601DateFormatter()
+}
 
 private extension DateFormatter {
     static let postDate: DateFormatter = {
