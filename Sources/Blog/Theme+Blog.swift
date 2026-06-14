@@ -258,13 +258,17 @@ private struct BlogHTMLFactory: HTMLFactory {
 
     func makeTagDetailsHTML(for page: TagDetailsPage, context: PublishingContext<Blog>) throws -> HTML? {
         let items = context.items(taggedWith: page.tag, sortedBy: \.date, order: .descending)
+        let description = tagDescriptions[page.tag.string]
         return HTML(
             .lang(context.site.language),
-            .siteHead(for: page, on: context.site),
+            .siteHead(for: page, on: context.site, descriptionOverride: description),
             .body(
                 .siteHeader(for: context, currentPath: page.path.string),
                 .main(
                     .h1(.span(.class("tag"), .text(page.tag.string))),
+                    .unwrap(description) { description in
+                        .p(.class("tag-description"), .text(description))
+                    },
                     .ul(
                         .class("item-list"),
                         .forEach(items) { item in
@@ -277,6 +281,15 @@ private struct BlogHTMLFactory: HTMLFactory {
         )
     }
 }
+
+// MARK: - Tag descriptions
+
+// One-liner intros shown on a tag's detail page (and used as its meta
+// description). Keyed by the exact tag string. Tags without an entry simply
+// render without a description.
+private let tagDescriptions: [String: String] = [
+    "WWDC26 Notes": "Notes I prepared for myself while watching the WWDC26 videos.",
+]
 
 // MARK: - Path handling
 
@@ -409,7 +422,7 @@ private extension Node where Context == HTML.BodyContext {
 // MARK: - <head>
 
 private extension Node where Context == HTML.DocumentContext {
-    static func siteHead(for location: Location, on site: Blog, item: Item<Blog>? = nil) -> Node {
+    static func siteHead(for location: Location, on site: Blog, item: Item<Blog>? = nil, descriptionOverride: String? = nil) -> Node {
         let pageURL = site.url(for: location)
         let title: String
         if location is Index {
@@ -419,7 +432,7 @@ private extension Node where Context == HTML.DocumentContext {
         } else {
             title = "\(location.title) · \(site.name)"
         }
-        let description = location.description.isEmpty ? site.description : location.description
+        let description = descriptionOverride ?? (location.description.isEmpty ? site.description : location.description)
         let imagePath = item?.imagePath ?? Path("/images/og-default.png")
         let imageURL = site.url(for: imagePath).absoluteString
 
