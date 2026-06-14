@@ -8,6 +8,7 @@ This site is his blog about Swift, iOS, and software engineering.
 
 ## Posts
 
+- [What's New in Xcode 27](https://amitsamant.dev/blog/posts/whats-new-in-xcode-27) (2026-06-14): A walkthrough of everything new in Xcode 27 at WWDC 2026 — a redesigned workspace, a document-style project flow, a much deeper intelligence experience, the new Device Hub, and a big investment in the post-development workflow.
 - [What's New in SwiftUI](https://amitsamant.dev/blog/posts/whats-new-in-swiftui) (2026-06-11): A summary of everything new in SwiftUI at WWDC 2026 — refreshed look and feel, document-based app APIs, new interaction primitives, and data flow improvements.
 
 ## Links
