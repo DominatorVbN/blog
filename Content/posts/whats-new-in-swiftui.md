@@ -2,7 +2,7 @@
 title: What's New in SwiftUI
 date: 2026-06-11 12:00
 description: A summary of everything new in SwiftUI at WWDC 2026 — refreshed look and feel, document-based app APIs, new interaction primitives, and data flow improvements.
-tags: swiftui, wwdc, wwdc26
+tags: swiftui, wwdc, wwdc26, WWDC26 Notes
 image: /posts/whats-new-in-swiftui/images/0D3AA5C9-FB6D-435E-B684-F159EAAB7015.png
 ---
 

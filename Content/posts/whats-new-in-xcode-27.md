@@ -2,7 +2,7 @@
 title: What's New in Xcode 27
 date: 2026-06-14 12:00
 description: A walkthrough of everything new in Xcode 27 at WWDC 2026 — a redesigned workspace, a document-style project flow, a much deeper intelligence experience, the new Device Hub, and a big investment in the post-development workflow.
-tags: xcode, wwdc, wwdc26
+tags: xcode, wwdc, wwdc26, WWDC26 Notes
 image: /posts/whats-new-in-xcode-27/images/87CC0651-EF2B-42B4-9C18-035A0429DF75.png
 ---
 
