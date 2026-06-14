@@ -325,6 +325,13 @@ main {
 }
 .tag:hover { color: var(--accent); background: var(--accent-subtle); }
 
+.tag-description {
+  font-size: 1.06rem; /* 18px */
+  letter-spacing: -0.016em;
+  color: var(--text-secondary);
+  margin-top: 0.75rem;
+}
+
 /* ── Article ─────────────────────────────────────────────────────────── */
 .post-header { margin-bottom: 3rem; }
 
