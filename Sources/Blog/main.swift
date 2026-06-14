@@ -17,6 +17,7 @@ struct Blog: Website {
 }
 
 try Blog().publish(using: [
+    .installPlugin(.resourceImagePaths),
     .addMarkdownFiles(),
     .copyResources(),
     .generateHTML(withTheme: .blog),
