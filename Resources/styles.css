@@ -364,6 +364,11 @@ main {
   margin-top: 2.5rem;
   margin-bottom: 0.75rem;
 }
+/* Keep anchor-linked headings clear of the sticky global nav. */
+.post-body h1,
+.post-body h2,
+.post-body h3,
+.post-body h4 { scroll-margin-top: calc(48px + env(safe-area-inset-top) + 1rem); }
 .post-body h1 { font-size: 1.882rem; letter-spacing: 0; line-height: 1.13; }
 .post-body h2 { font-size: 1.65rem; letter-spacing: -0.021em; line-height: 1.14; }
 .post-body h3 { font-size: 1.235rem; letter-spacing: -0.011em; line-height: 1.29; }
@@ -638,6 +643,232 @@ main > h1 {
 }
 
 .text-muted { color: var(--text-secondary); }
+
+/* ── Floating table of contents ──────────────────────────────────────── */
+.toc {
+  /* iOS-style spring easings: overshoot, then settle. The gentle one drives
+     the size morph; the bouncier one drives the chevron and content. */
+  --toc-spring: linear(0, 0.034, 0.13, 0.272, 0.443 30%, 0.624, 0.78, 0.898, 0.976, 1.021 60%, 1.04, 1.038, 1.025, 1.01, 1, 0.997, 1);
+  --toc-spring-bounce: linear(0, 0.045, 0.17, 0.35 25%, 0.55, 0.73, 0.87, 0.96, 1.03 50%, 1.09, 1.115, 1.105 65%, 1.06, 1.01, 0.978, 0.97, 0.984, 1, 1.006, 1);
+  position: fixed;
+  top: calc(48px + env(safe-area-inset-top) + 1rem);
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 2rem));
+}
+
+/* The pill / card header — always visible, anchors the morph. */
+.toc-toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: max-content;
+  font-family: inherit;
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--hairline);
+  border-radius: 980px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.706rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: color 0.2s ease, border-radius 0.45s var(--toc-spring);
+}
+.toc-toggle:hover { color: var(--text); }
+.toc:not(.collapsed) .toc-toggle { color: var(--text); }
+
+.toc-icon,
+.toc-chevron {
+  width: 0.9em;
+  height: 0.9em;
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask: no-repeat center / contain;
+  mask: no-repeat center / contain;
+}
+.toc-icon {
+  -webkit-mask-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Cg fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round"%3E%3Cpath d="M5 4h9M5 8h9M5 12h9"/%3E%3Ccircle cx="1.75" cy="4" r="0.4" fill="black" stroke="none"/%3E%3Ccircle cx="1.75" cy="8" r="0.4" fill="black" stroke="none"/%3E%3Ccircle cx="1.75" cy="12" r="0.4" fill="black" stroke="none"/%3E%3C/g%3E%3C/svg%3E');
+  mask-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Cg fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round"%3E%3Cpath d="M5 4h9M5 8h9M5 12h9"/%3E%3Ccircle cx="1.75" cy="4" r="0.4" fill="black" stroke="none"/%3E%3Ccircle cx="1.75" cy="8" r="0.4" fill="black" stroke="none"/%3E%3Ccircle cx="1.75" cy="12" r="0.4" fill="black" stroke="none"/%3E%3C/g%3E%3C/svg%3E');
+}
+/* Chevron points up when expanded (tap to collapse), down when collapsed. */
+.toc-chevron {
+  width: 0.7em;
+  height: 0.7em;
+  margin-left: 0.05rem;
+  -webkit-mask-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Cpath d="M4 6l4 4 4-4" fill="none" stroke="black" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E');
+  mask-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Cpath d="M4 6l4 4 4-4" fill="none" stroke="black" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E');
+  transform: rotate(180deg);
+  transition: transform 0.5s var(--toc-spring-bounce);
+}
+.toc.collapsed .toc-chevron { transform: rotate(0deg); }
+
+/* Morphing body — the grid-rows 1fr⇄0fr trick animates height to/from the
+   content's natural size, so the panel unfolds and folds with the spring. */
+.toc-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  width: 100%;
+  transition: grid-template-rows 0.5s var(--toc-spring);
+}
+.toc.collapsed .toc-body { grid-template-rows: 0fr; }
+
+.toc-nav {
+  overflow: hidden;
+  min-height: 0;
+  margin-top: 0.5rem;
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.9rem;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transform-origin: top right;
+  transition: opacity 0.32s ease, transform 0.45s var(--toc-spring-bounce);
+}
+.toc.collapsed .toc-nav {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+}
+.toc-nav ul { list-style: none; margin: 0; padding: 0; }
+.toc-nav li { margin: 0; }
+.toc-nav a {
+  display: block;
+  padding: 0.3rem 0;
+  font-size: 0.824rem;
+  letter-spacing: -0.016em;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+.toc-nav a:hover { color: var(--accent); }
+/* Section currently in view, set by the scroll-spy script. */
+.toc-nav a.active { color: var(--accent); font-weight: 600; }
+.toc-nav .toc-level-3 a { padding-left: 0.85rem; }
+.toc-nav .toc-level-4 a { padding-left: 1.7rem; }
+
+/* ── Read Later / Continue Reading ───────────────────────────────────── */
+/* Buttons sit at the trailing edge of a card or post header; keep them out of
+   the flex flow so titles stay full width. */
+.item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.bookmark-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 980px;
+  padding: 0.35rem;
+  color: var(--text-tertiary);
+  font-family: inherit;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.bookmark-btn:hover { color: var(--text); background: var(--surface); }
+.bookmark-btn.is-saved { color: var(--accent); }
+
+.bookmark-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+  display: block;
+  background-color: currentColor;
+  -webkit-mask: no-repeat center / contain;
+  mask: no-repeat center / contain;
+  -webkit-mask-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Cpath d="M4 1.75h8a1.25 1.25 0 0 1 1.25 1.25v11.6L8 11.4 2.75 14.6V3A1.25 1.25 0 0 1 4 1.75z" fill="none" stroke="black" stroke-width="1.5" stroke-linejoin="round"/%3E%3C/svg%3E');
+  mask-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Cpath d="M4 1.75h8a1.25 1.25 0 0 1 1.25 1.25v11.6L8 11.4 2.75 14.6V3A1.25 1.25 0 0 1 4 1.75z" fill="none" stroke="black" stroke-width="1.5" stroke-linejoin="round"/%3E%3C/svg%3E');
+}
+.bookmark-btn.is-saved .bookmark-icon {
+  -webkit-mask-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Cpath d="M4 1.75h8a1.25 1.25 0 0 1 1.25 1.25v11.6L8 11.4 2.75 14.6V3A1.25 1.25 0 0 1 4 1.75z"/%3E%3C/svg%3E');
+  mask-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"%3E%3Cpath d="M4 1.75h8a1.25 1.25 0 0 1 1.25 1.25v11.6L8 11.4 2.75 14.6V3A1.25 1.25 0 0 1 4 1.75z"/%3E%3C/svg%3E');
+}
+
+/* Labeled variant lives in the post header. */
+.bookmark-btn-labeled {
+  border-color: var(--hairline);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.706rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+}
+.bookmark-btn-labeled:hover { color: var(--text); background: var(--surface); }
+.bookmark-btn-labeled.is-saved { color: var(--accent); border-color: var(--accent-subtle); background: var(--accent-subtle); }
+.bookmark-btn-labeled .bookmark-icon { width: 0.9rem; height: 0.9rem; }
+.post-header .bookmark-btn-labeled { margin-top: 1.25rem; }
+
+/* Dismiss control on Continue Reading cards. */
+.continue-dismiss {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 0.15rem 0.4rem;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--text-tertiary);
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.continue-dismiss:hover { color: var(--text); background: var(--surface); }
+
+/* Per-article progress shown on Continue Reading cards. */
+.item-progress {
+  height: 4px;
+  max-width: 220px;
+  margin-top: 0.6rem;
+  border-radius: 980px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.item-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+.progress-label { color: var(--accent); font-weight: 600; }
+
+/* Top-of-page reading indicator on article pages. */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 10000;
+  pointer-events: none;
+  background: transparent;
+}
+.reading-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.1s linear;
+}
 
 /* ── Motion preferences ──────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

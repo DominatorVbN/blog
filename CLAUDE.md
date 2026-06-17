@@ -9,6 +9,18 @@ Personal site + blog. Static-site generator built on [Publish](https://github.co
 - `swift run Blog` — compile + generate `Output/` (also what CI runs).
 - In Xcode: run the `Blog` scheme. If CLI `swift build`/`run` fails with a `BuildServerProtocol.framework` dyld error (toolchain mismatch), use Xcode `BuildProject`/`RunProject` or run the built binary at `~/Library/Developer/Xcode/DerivedData/blog-*/Build/Products/Debug/Blog`.
 
+## Local preview
+
+After any UI change (HTML in `Theme+Blog.swift`, `styles.css`, or other resources), regenerate and show a live local preview, then point the user at the URL:
+
+1. Regenerate `Output/` (build via Xcode `BuildProject`, then run the binary from the repo root so it finds `Content/`/`Resources/`: `cd <repo> && ~/Library/Developer/Xcode/DerivedData/blog-*/Build/Products/Debug/Blog`).
+2. The site lives under the `/blog` subpath, so serve it under a matching path via a symlink:
+   - `mkdir -p /tmp/blogpreview && ln -sf <repo>/Output /tmp/blogpreview/blog`
+   - `cd /tmp/blogpreview && python3 -m http.server 8000 --bind 127.0.0.1` (run in background).
+3. Open / share `http://127.0.0.1:8000/blog/...` (e.g. a post page). Tell the user to hard-refresh (⌘⇧R) since CSS/JS may be cached.
+
+Serving `Output/` directly at `/` would 404 — the `/blog`-prefixed asset and link paths require the `blog/` path segment.
+
 ## Architecture
 
 - **`Sources/Blog/main.swift`** — `Blog: Website` (URL, sections, metadata) + ordered publishing steps. Order matters: `installPlugin(.resourceImagePaths)` must precede `addMarkdownFiles()` (it registers an Ink parser modifier). Then `copyResources`, `generateHTML(.blog)`, RSS, sitemap, and a custom step writing `Output/llms.txt`.
