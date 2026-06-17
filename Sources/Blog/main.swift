@@ -1,6 +1,7 @@
 import Foundation
 import Publish
 import Plot
+import SplashPublishPlugin
 
 struct Blog: Website {
     enum SectionID: String, WebsiteSectionID {
@@ -18,6 +19,7 @@ struct Blog: Website {
 
 try Blog().publish(using: [
     .installPlugin(.resourceImagePaths),
+    .installPlugin(.splash(withClassPrefix: "")),
     .addMarkdownFiles(),
     .copyResources(),
     .generateHTML(withTheme: .blog),
