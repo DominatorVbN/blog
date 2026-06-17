@@ -29,6 +29,7 @@ private struct BlogHTMLFactory: HTMLFactory {
                             .a(.href("https://linkedin.com/in/amitsamant-dev"), .class("link-pill"), .text("LinkedIn"))
                         )
                     ),
+                    .readingSections(),
                     .if(!context.sections[.posts].items.isEmpty,
                         .div(
                             .p(.class("section-title"), .text("Recent Posts")),
@@ -191,11 +192,15 @@ private struct BlogHTMLFactory: HTMLFactory {
     }
 
     func makeItemHTML(for item: Item<Blog>, context: PublishingContext<Blog>) throws -> HTML {
-        HTML(
+        // Inject anchor ids into the rendered headings and collect a table of
+        // contents from them, so the floating index can link into the page.
+        let toc = TableOfContents(html: item.body.html)
+        return HTML(
             .lang(context.site.language),
             .siteHead(for: item, on: context.site, item: item),
             .body(
                 .siteHeader(for: context, currentPath: item.path.string),
+                .tableOfContents(toc.entries),
                 .main(
                     .article(
                         .div(
@@ -212,12 +217,14 @@ private struct BlogHTMLFactory: HTMLFactory {
                                         .a(.href(context.site.prefixedPath(context.site.path(for: tag))), .class("tag"), .text(tag.string))
                                     }
                                 )
-                            )
+                            ),
+                            .bookmarkButton(for: item, on: context.site, labeled: true)
                         ),
-                        .div(.class("post-body"), .contentBody(item.body))
+                        .div(.class("post-body"), .raw(toc.anchoredHTML))
                     )
                 ),
-                .siteFooter()
+                .siteFooter(),
+                .tableOfContentsScript(toc.entries)
             )
         )
     }
@@ -305,6 +312,7 @@ private extension Website {
 
     func prefixedPath(_ path: Path) -> String {
         pathPrefix + path.absoluteString
+        
     }
 
     func prefixedPath(_ path: String) -> String {
@@ -313,6 +321,7 @@ private extension Website {
 }
 
 // MARK: - Shared nodes
+
 
 private extension Node where Context == HTML.BodyContext {
     static func siteHeader<T: Website>(for context: PublishingContext<T>, currentPath: String) -> Node {
@@ -334,6 +343,135 @@ private extension Node where Context == HTML.BodyContext {
                 )
             )
         )
+    }
+
+    // Floating "Contents" index pinned to the top-right of the page. Rendered
+    // expanded so it works (and stays open) without any JavaScript; the script
+    // adds the spring morph, the scroll-driven collapse, and the toggle. Renders
+    // nothing unless there are at least two headings.
+    static func tableOfContents(_ entries: [TableOfContents.Entry]) -> Node {
+        guard entries.count >= 2 else { return .empty }
+        return .div(
+            .class("toc"),
+            .button(
+                .type(.button),
+                .class("toc-toggle"),
+                .attribute(named: "aria-expanded", value: "true"),
+                .attribute(named: "aria-controls", value: "toc-nav"),
+                .span(.class("toc-icon")),
+                .span(.class("toc-label"), .text("Contents")),
+                .span(.class("toc-chevron"))
+            ),
+            .div(
+                .class("toc-body"),
+                .nav(
+                    .class("toc-nav"),
+                    .id("toc-nav"),
+                    .ul(
+                        .forEach(entries) { entry in
+                            .li(
+                                .class("toc-level-\(entry.level)"),
+                                .a(.href("#\(entry.id)"), .raw(entry.title))
+                            )
+                        }
+                    )
+                )
+            )
+        )
+    }
+
+    // Drives the floating index: a scroll-spy that highlights the section in
+    // view, plus a spring-morph that keeps the index expanded at the top of the
+    // page and collapses it to a pill once the reader scrolls (re-expanding at
+    // the top, until they toggle it by hand). Pure DOM, no dependencies; renders
+    // nothing unless there are at least two headings to track.
+    static func tableOfContentsScript(_ entries: [TableOfContents.Entry]) -> Node {
+        guard entries.count >= 2 else { return .empty }
+        return .script(.raw(#"""
+        (function () {
+          var toc = document.querySelector('.toc');
+          var toggle = toc && toc.querySelector('.toc-toggle');
+          if (toc && toggle) {
+            var userToggled = false;
+            var threshold = 24;
+            function setCollapsed(collapsed) {
+              if (toc.classList.contains('collapsed') === collapsed) return;
+              toc.classList.toggle('collapsed', collapsed);
+              toggle.setAttribute('aria-expanded', String(!collapsed));
+            }
+            toggle.addEventListener('click', function () {
+              userToggled = true;
+              setCollapsed(!toc.classList.contains('collapsed'));
+            });
+
+            // A jump triggered from the index itself shouldn't auto-collapse it.
+            // Hold the expanded state until that programmatic scroll settles;
+            // manual scrolling afterwards collapses as usual.
+            var programmatic = false;
+            var settleTimer;
+            function holdExpanded() {
+              setCollapsed(false);
+              programmatic = true;
+              clearTimeout(settleTimer);
+              settleTimer = window.setTimeout(function () { programmatic = false; }, 700);
+            }
+            Array.prototype.slice.call(toc.querySelectorAll('.toc-nav a'))
+              .forEach(function (a) { a.addEventListener('click', holdExpanded); });
+            window.addEventListener('scrollend', function () { programmatic = false; });
+
+            var ticking = false;
+            function onScroll() {
+              if (userToggled || programmatic || ticking) return;
+              ticking = true;
+              window.requestAnimationFrame(function () {
+                setCollapsed(window.pageYOffset > threshold);
+                ticking = false;
+              });
+            }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+          }
+
+          var links = Array.prototype.slice.call(document.querySelectorAll('.toc-nav a'));
+          if (!links.length) return;
+          var map = {};
+          links.forEach(function (a) {
+            map[decodeURIComponent(a.getAttribute('href').slice(1))] = a;
+          });
+          var headings = links
+            .map(function (a) { return document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1))); })
+            .filter(Boolean);
+          if (!headings.length) return;
+
+          var active = null;
+          function setActive(a) {
+            if (active === a) return;
+            if (active) active.classList.remove('active');
+            active = a;
+            if (active) active.classList.add('active');
+          }
+
+          var visible = {};
+          var observer = new IntersectionObserver(function (records) {
+            records.forEach(function (r) {
+              if (r.isIntersecting) visible[r.target.id] = true;
+              else delete visible[r.target.id];
+            });
+            // Prefer the first in-view heading (document order)…
+            for (var i = 0; i < headings.length; i++) {
+              if (visible[headings[i].id]) { setActive(map[headings[i].id]); return; }
+            }
+            // …otherwise fall back to the last heading scrolled past.
+            var above = null;
+            headings.forEach(function (h) {
+              if (h.getBoundingClientRect().top < 80) above = h;
+            });
+            if (above) setActive(map[above.id]);
+          }, { rootMargin: '-72px 0px -55% 0px', threshold: 0 });
+
+          headings.forEach(function (h) { observer.observe(h); });
+        })();
+        """#))
     }
 
     static func siteFooter() -> Node {
@@ -371,6 +509,49 @@ private extension Node where Context == HTML.BodyContext {
                 .if(!item.description.isEmpty,
                     .p(.class("item-description"), .text(item.description))
                 )
+            ),
+            .div(.class("item-actions"), .bookmarkButton(for: item, on: site))
+        )
+    }
+
+    // A "Read Later" toggle. The button only carries the article's metadata in
+    // data-* attributes; reading.js reads it, toggles localStorage, and reflects
+    // the saved state. The `labeled` variant adds visible text for the article
+    // header; list cards use the icon-only form.
+    static func bookmarkButton(for item: Item<Blog>, on site: Blog, labeled: Bool = false) -> Node {
+        .button(
+            .type(.button),
+            .class(labeled ? "bookmark-btn bookmark-btn-labeled" : "bookmark-btn"),
+            .attribute(named: "aria-pressed", value: "false"),
+            .attribute(named: "aria-label", value: "Save for later"),
+            .attribute(named: "title", value: "Read later"),
+            .attribute(named: "data-url", value: site.prefixedPath(item.path)),
+            .attribute(named: "data-title", value: item.title),
+            .attribute(named: "data-date", value: DateFormatter.postDate.string(from: item.date)),
+            .attribute(named: "data-description", value: item.description),
+            .span(.class("bookmark-icon")),
+            .if(labeled, .span(.class("bookmark-label"), .text("Read later")))
+        )
+    }
+
+    // Empty placeholders for the home page's "Continue Reading" and "Read Later"
+    // lists. They stay hidden until reading.js finds matching localStorage
+    // entries and fills them in (and re-hides them when emptied).
+    static func readingSections() -> Node {
+        .group(
+            .div(
+                .class("reading-section"),
+                .id("continue-reading-section"),
+                .attribute(named: "hidden", value: "hidden"),
+                .p(.class("section-title"), .text("Continue Reading")),
+                .ul(.class("item-list"), .id("continue-reading-list"))
+            ),
+            .div(
+                .class("reading-section"),
+                .id("read-later-section"),
+                .attribute(named: "hidden", value: "hidden"),
+                .p(.class("section-title"), .text("Read Later")),
+                .ul(.class("item-list"), .id("read-later-list"))
             )
         )
     }
@@ -528,6 +709,10 @@ private extension Node where Context == HTML.DocumentContext {
             ),
             .link(.rel(.stylesheet), .href(site.prefixedPath("/styles.css"))),
             .script(
+                .attribute(named: "src", value: site.prefixedPath("/reading.js")),
+                .attribute(named: "defer", value: "")
+            ),
+            .script(
                 .attribute(named: "type", value: "application/ld+json"),
                 .raw(structuredData(for: location, on: site, item: item))
             )
@@ -581,6 +766,97 @@ private func structuredData(for location: Location, on site: Blog, item: Item<Bl
     }
     let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
     return String(data: data, encoding: .utf8) ?? "{}"
+}
+
+// MARK: - Table of contents
+
+// Parses the rendered post HTML, injects slug `id`s into its headings, and
+// collects an ordered list of entries the floating index links to. Both the
+// rewritten HTML and the entries are derived in a single pass.
+struct TableOfContents {
+    struct Entry {
+        let level: Int
+        /// Inner heading HTML (tags stripped, entities preserved) for display.
+        let title: String
+        let id: String
+    }
+
+    let anchoredHTML: String
+    let entries: [Entry]
+
+    init(html: String) {
+        guard let regex = try? NSRegularExpression(
+            pattern: "<h([1-4])>([\\s\\S]*?)</h\\1>"
+        ) else {
+            self.anchoredHTML = html
+            self.entries = []
+            return
+        }
+
+        let source = html as NSString
+        let matches = regex.matches(in: html, range: NSRange(location: 0, length: source.length))
+        let result = NSMutableString(string: html)
+        var entries: [Entry] = []
+        var usedIDs: Set<String> = []
+
+        // Walk matches in reverse so earlier ranges stay valid as we splice.
+        for match in matches.reversed() {
+            let level = Int(source.substring(with: match.range(at: 1))) ?? 2
+            let inner = source.substring(with: match.range(at: 2))
+            let title = TableOfContents.stripTags(inner)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !title.isEmpty else { continue }
+
+            let slug = TableOfContents.slugify(title)
+            var unique = slug.isEmpty ? "section" : slug
+            var suffix = 2
+            while usedIDs.contains(unique) {
+                unique = "\(slug.isEmpty ? "section" : slug)-\(suffix)"
+                suffix += 1
+            }
+            usedIDs.insert(unique)
+            entries.insert(Entry(level: level, title: title, id: unique), at: 0)
+
+            // The opening tag is always four characters, e.g. "<h2>".
+            result.replaceCharacters(
+                in: NSRange(location: match.range.location, length: 4),
+                with: "<h\(level) id=\"\(unique)\">"
+            )
+        }
+
+        self.anchoredHTML = result as String
+        self.entries = entries
+    }
+
+    private static func stripTags(_ html: String) -> String {
+        html.replacingOccurrences(
+            of: "<[^>]+>",
+            with: "",
+            options: .regularExpression
+        )
+    }
+
+    private static func slugify(_ text: String) -> String {
+        // Drop HTML entities, then keep alphanumerics and collapse the rest to
+        // single hyphens.
+        let withoutEntities = text.replacingOccurrences(
+            of: "&[^;]+;",
+            with: "",
+            options: .regularExpression
+        )
+        var slug = ""
+        var lastWasHyphen = false
+        for scalar in withoutEntities.lowercased().unicodeScalars {
+            if CharacterSet.alphanumerics.contains(scalar) {
+                slug.unicodeScalars.append(scalar)
+                lastWasHyphen = false
+            } else if !lastWasHyphen {
+                slug.append("-")
+                lastWasHyphen = true
+            }
+        }
+        return slug.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+    }
 }
 
 // MARK: - Helpers
