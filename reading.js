@@ -344,6 +344,77 @@
     }
   }
 
+  // ── Copy buttons on code blocks ─────────────────────────────────────────
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    // Fallback for browsers without the async clipboard API.
+    return new Promise(function (resolve, reject) {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  // Canonical page URL, without any hash or query, used in the attribution
+  // comment prepended to copied snippets.
+  function sourceURL() {
+    return window.location.origin + window.location.pathname;
+  }
+
+  function initCopyButtons() {
+    var blocks = document.querySelectorAll('.post-body pre');
+    Array.prototype.forEach.call(blocks, function (pre) {
+      var code = pre.querySelector('code');
+      if (!code) return;
+
+      // Wrap the <pre> so the button stays pinned while the code scrolls
+      // horizontally (an absolute child of <pre> would scroll away with it).
+      var wrap = document.createElement('div');
+      wrap.className = 'code-block';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copy-btn';
+      btn.setAttribute('aria-label', 'Copy code');
+      btn.setAttribute('title', 'Copy code');
+      var label = document.createElement('span');
+      label.className = 'copy-btn-label';
+      label.textContent = 'Copy';
+      btn.appendChild(label);
+      wrap.appendChild(btn);
+
+      var resetTimer;
+      btn.addEventListener('click', function () {
+        var snippet = '// Copied from ' + sourceURL() + '\n\n' + code.textContent;
+        copyText(snippet).then(function () {
+          btn.classList.add('copied');
+          label.textContent = 'Copied';
+          window.clearTimeout(resetTimer);
+          resetTimer = window.setTimeout(function () {
+            btn.classList.remove('copied');
+            label.textContent = 'Copy';
+          }, 2000);
+        }).catch(function () {
+          label.textContent = 'Press ⌘C';
+        });
+      });
+    });
+  }
+
   // ── Wiring ──────────────────────────────────────────────────────────────
   // Delegated so dynamically built cards work without per-button listeners.
   function onClick(e) {
@@ -373,6 +444,7 @@
     document.addEventListener('click', onClick);
     reflectBookmarks();
     initProgress();
+    initCopyButtons();
     renderHome();
   }
 
