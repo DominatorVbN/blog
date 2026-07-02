@@ -34,6 +34,7 @@
   --radius: 18px;
   --radius-sm: 12px;
   --blur: saturate(180%) blur(20px);
+  --glass-tint: rgba(251, 251, 253, 0.55);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -60,6 +61,7 @@
     --syntax-comment: #7f8c98;
     --syntax-dotaccess: #67b7a4;
     --syntax-preprocessing: #fd8f3f;
+    --glass-tint: rgba(22, 22, 23, 0.5);
   }
 }
 
@@ -77,6 +79,9 @@ body {
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* The nav is fixed (liquidGL excludes fixed elements from its snapshot),
+     so the flow no longer reserves its height. */
+  padding-top: calc(48px + env(safe-area-inset-top));
 }
 
 a { color: var(--accent); text-decoration: none; transition: color 0.2s ease; }
@@ -84,17 +89,38 @@ a:hover { color: var(--accent-hover); }
 
 ::selection { background: var(--accent-subtle); }
 
-/* ── Global nav — frosted glass, like apple.com ─────────────────────── */
+/* ── Global nav — liquid glass (WebGL) over a frosted fallback ───────── */
+/* Fixed rather than sticky so liquidGL auto-excludes it from the body
+   snapshot it refracts. The header itself is only the lens geometry:
+   liquidGL forces the lens element's background transparent, so all
+   visible chrome lives on .glass-nav-content inside it. */
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 9999;
+}
+
+.glass-nav-content {
+  /* Above the lens canvas (which liquidGL layers beneath the header). */
+  position: relative;
+  z-index: 2;
   background: var(--nav-bg);
   -webkit-backdrop-filter: var(--blur);
   backdrop-filter: var(--blur);
   border-bottom: 1px solid var(--hairline);
   /* Extend the frosted glass under the iOS status bar / notch */
   padding-top: env(safe-area-inset-top);
+}
+
+/* Once the WebGL lens is running (init script sets the class), the canvas
+   provides the frost; swap the opaque nav background for a translucent
+   tint and drop the backdrop-filter so it doesn't blur the lens canvas. */
+html.liquidgl-on .glass-nav-content {
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .site-header .inner {
@@ -384,7 +410,7 @@ main {
   margin-top: 2.5rem;
   margin-bottom: 0.75rem;
 }
-/* Keep anchor-linked headings clear of the sticky global nav. */
+/* Keep anchor-linked headings clear of the fixed global nav. */
 .post-body h1,
 .post-body h2,
 .post-body h3,
