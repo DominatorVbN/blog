@@ -163,7 +163,8 @@ private struct BlogHTMLFactory: HTMLFactory {
                         )
                     )
                 ),
-                .siteFooter()
+                .siteFooter(),
+                .liquidGlassScripts(on: context.site)
             )
         )
     }
@@ -186,7 +187,8 @@ private struct BlogHTMLFactory: HTMLFactory {
                         }
                     )
                 ),
-                .siteFooter()
+                .siteFooter(),
+                .liquidGlassScripts(on: context.site)
             )
         )
     }
@@ -224,7 +226,8 @@ private struct BlogHTMLFactory: HTMLFactory {
                     )
                 ),
                 .siteFooter(),
-                .tableOfContentsScript(toc.entries)
+                .tableOfContentsScript(toc.entries),
+                .liquidGlassScripts(on: context.site)
             )
         )
     }
@@ -238,7 +241,8 @@ private struct BlogHTMLFactory: HTMLFactory {
                 .main(
                     .div(.class("post-body"), .contentBody(page.body))
                 ),
-                .siteFooter()
+                .siteFooter(),
+                .liquidGlassScripts(on: context.site)
             )
         )
     }
@@ -258,7 +262,8 @@ private struct BlogHTMLFactory: HTMLFactory {
                         }
                     )
                 ),
-                .siteFooter()
+                .siteFooter(),
+                .liquidGlassScripts(on: context.site)
             )
         )
     }
@@ -283,7 +288,8 @@ private struct BlogHTMLFactory: HTMLFactory {
                         }
                     )
                 ),
-                .siteFooter()
+                .siteFooter(),
+                .liquidGlassScripts(on: context.site)
             )
         )
     }
@@ -324,24 +330,40 @@ private extension Website {
 
 
 private extension Node where Context == HTML.BodyContext {
+    // The header is a liquidGL lens: the WebGL canvas refracts the page
+    // beneath it. liquidGL clears the lens element's own background, so the
+    // readable tint lives on the .glass-nav-content wrapper above the canvas.
     static func siteHeader<T: Website>(for context: PublishingContext<T>, currentPath: String) -> Node {
         .header(
-            .class("site-header"),
+            .class("site-header liquid-glass"),
             .div(
-                .class("inner"),
-                .a(.href(context.site.prefixedPath("/")), .class("site-name"), .text(context.site.name)),
-                .nav(
-                    .a(
-                        .href(context.site.prefixedPath("/posts")),
-                        .class(currentPath.drop(while: { $0 == "/" }).hasPrefix("posts") ? "selected" : ""),
-                        .text("Posts")
-                    ),
-                    .a(
-                        .href(context.site.prefixedPath("/feed.rss")),
-                        .text("RSS")
+                .class("glass-nav-content"),
+                .div(
+                    .class("inner"),
+                    .a(.href(context.site.prefixedPath("/")), .class("site-name"), .text(context.site.name)),
+                    .nav(
+                        .a(
+                            .href(context.site.prefixedPath("/posts")),
+                            .class(currentPath.drop(while: { $0 == "/" }).hasPrefix("posts") ? "selected" : ""),
+                            .text("Posts")
+                        ),
+                        .a(
+                            .href(context.site.prefixedPath("/feed.rss")),
+                            .text("RSS")
+                        )
                     )
                 )
             )
+        )
+    }
+
+    // Vendored liquid-glass scripts, loaded at the end of <body> in this
+    // exact order (html2canvas → liquidGL → init).
+    static func liquidGlassScripts<T: Website>(on site: T) -> Node {
+        .group(
+            .script(.attribute(named: "src", value: site.prefixedPath("/js/html2canvas.min.js"))),
+            .script(.attribute(named: "src", value: site.prefixedPath("/js/liquidGL.js"))),
+            .script(.attribute(named: "src", value: site.prefixedPath("/js/liquid-glass-init.js")))
         )
     }
 
@@ -578,7 +600,9 @@ private extension Node where Context == HTML.BodyContext {
         .a(
             .href(href),
             .class("project-card app-card"),
-            .img(.class("app-icon"), .src(iconURL), .alt(title + " app icon")),
+            // Cross-origin icons stall html2canvas's snapshot (CORS re-fetch
+            // until its image timeout); keep them out of the glass refraction.
+            .img(.class("app-icon"), .src(iconURL), .alt(title + " app icon"), .attribute(named: "data-liquid-ignore", value: "")),
             .h3(.text(title)),
             .p(.text(description)),
             .span(.class("card-link-label"), .text(linkLabel))
